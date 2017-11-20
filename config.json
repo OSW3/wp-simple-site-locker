@@ -1,0 +1,127 @@
+{
+    "_namespace": "siteLocker",
+    
+    "assets": {
+        "styles": [],
+        "scripts": [{
+            "name": "test",
+            "path": "admin"
+        }]
+    },
+    
+    "assets_admin": {
+        "styles": [],
+        "scripts": [{
+            "name": "test",
+            "path": "admin"
+        }]
+    },
+
+    "register": {
+
+        "settings": {
+
+            "menus": {
+                "_admin": true,
+                "_action": true,
+                "settings": true,
+
+                "_icon": "dashicons-email",
+                "_icon": "image:16x16.png",
+
+                "submenus": {}
+            },
+
+            "schema": [{
+                "title": "Vérouillage",
+                "description": "Activer le vérouillage du site, empêchera toute personne qui ne possède pas le code d'accès de visiter le site.",
+                "schema": [{
+                    "key": "is_locked",
+                    "label": "Activer",
+                    "type": "checkbox",
+                    "default": false
+                },{
+                    "key": "password",
+                    "label": "Définir le code d'accès",
+                    "type": "password"
+                },{
+                    "key": "expires",
+                    "label": "Dévérouiller pendant",
+                    "type": "select",
+                    "default": "43200",
+                    "options": {
+                        "3600": "1 hour",
+                        "7200": "2 hours",
+                        "21600": "6 hours",
+                        "43200": "12 hours",
+                        "86400": "1 day",
+                        "172800": "2 days",
+                        "604800": "7 days",
+                        "1209600": "14 days",
+                        "2592000": "1 month",
+                        "5184000": "2 month",
+                        "7776000": "3 month",
+                        "15552000": "6 month",
+                        "31104000": "1 year"
+                    }
+                }]
+            }]
+        },
+
+
+        "posts": [{
+            "type": "contact",
+            "public": true,
+            "labels": {
+                "name": "Messages"
+            },
+            "permalink": false,
+            "menu_icon": "dashicons-email",
+            "supports": [
+                ""
+            ],
+            "capabilities": {
+                "create_posts": "do_not_allow"
+            },
+            "map_meta_cap": true,
+
+            "metas": {
+                "title": "-",
+                "schema": [{
+                    "key": "name",
+                    "label": "Nom de l'expéditeur",
+                    "placeholder": "Prénom / Nom *",
+                    "required": true,
+                    "disabled": true,
+                    "type": "text"
+                },{
+                    "key": "email",
+                    "label": "Adresse e-mail",
+                    "placeholder": "Adresse e-mail *",
+                    "required": true,
+                    "disabled": true,
+                    "type": "email"
+                },{
+                    "key": "phone",
+                    "label": "Numéro de téléphone",
+                    "placeholder": "Téléphone *",
+                    "required": true,
+                    "disabled": true,
+                    "type": "tel"
+                },{
+                    "key": "message",
+                    "label": "Message",
+                    "placeholder": "Message *",
+                    "required": true,
+                    "disabled": true,
+                    "type": "textarea"
+                }]
+            }
+        }]
+
+    },
+
+    "hooks": {
+        "OSW3_SiteLocker": "wp"
+    }
+}
