@@ -1,14 +1,16 @@
 <?php
 
-if (!class_exists('OSW3_V1_RegisterPosts'))
+if (!class_exists('OSW3_RegisterPosts'))
 {
-    class OSW3_V1_RegisterPosts extends OSW3_V1
+    class OSW3_RegisterPosts extends OSW3
     {
+        private $config;
         public $state;
         public $posts;
 
-        public function __construct( $state )
+        public function __construct( $params )
         {
+            $this->config = $params[0];
             // $this->state = $state;
 
             // $this->setPosts();
@@ -34,7 +36,7 @@ if (!class_exists('OSW3_V1_RegisterPosts'))
                         {
                             $post->rewrite = (array) $post->rewrite;
 
-                            $do = OSW3_V1::tryToDo($post->rewrite['slug']);
+                            $do = OSW3::tryToDo($post->rewrite['slug']);
                             if (false != $do)
                             {
                                 $post->rewrite['slug'] = $do;
@@ -65,7 +67,7 @@ if (!class_exists('OSW3_V1_RegisterPosts'))
                             {
                                 $post->category->rewrite = (array) $post->category->rewrite;
     
-                                $do = OSW3_V1::tryToDo($post->category->rewrite['slug']);
+                                $do = OSW3::tryToDo($post->category->rewrite['slug']);
                                 if (false != $do)
                                 {
                                     $post->category->rewrite['slug'] = $do;
@@ -111,13 +113,13 @@ if (!class_exists('OSW3_V1_RegisterPosts'))
         {
             $path = $this->state->state->getPath();
             require_once($path.'osw3/register/metaboxes.php');
-            new OSW3_V1_RegisterMetaboxes( $this );
+            new OSW3_RegisterMetaboxes( $this );
         }
         public function save_metaboxes( $id )
         {
             $path = $this->state->state->getPath();
             require_once($path.'osw3/register/metaboxes.php');
-            OSW3_V1_RegisterMetaboxes::save( $this->posts, intval($id), $path );
+            OSW3_RegisterMetaboxes::save( $this->posts, intval($id), $path );
         }
 
         public function setPosts()
@@ -146,7 +148,7 @@ if (!class_exists('OSW3_V1_RegisterPosts'))
                     {
                         foreach ($post->listTable->columns as $column)
                         {
-                            $columns[OSW3_V1::slugify($column->name)] = $column->name;
+                            $columns[OSW3::slugify($column->name)] = $column->name;
                         }
                     }
                 }
@@ -166,7 +168,7 @@ if (!class_exists('OSW3_V1_RegisterPosts'))
                         {
                             if (isset($column->sortable) && $column->sortable === true)
                             {
-                                $columns[OSW3_V1::slugify($column->name)] = OSW3_V1::slugify($column->name);
+                                $columns[OSW3::slugify($column->name)] = OSW3::slugify($column->name);
                             }
                         }
                     }
@@ -185,7 +187,7 @@ if (!class_exists('OSW3_V1_RegisterPosts'))
                     {
                         foreach ($post->listTable->columns as $column)
                         {
-                            if ($columnName === OSW3_V1::slugify($column->name))
+                            if ($columnName === OSW3::slugify($column->name))
                             {
                                 if (is_array($column->data)) 
                                 {

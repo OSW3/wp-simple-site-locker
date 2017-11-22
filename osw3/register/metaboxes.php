@@ -1,8 +1,8 @@
 <?php
 
-if (!class_exists('OSW3_V1_RegisterMetaboxes'))
+if (!class_exists('OSW3_RegisterMetaboxes'))
 {
-    class OSW3_V1_RegisterMetaboxes extends OSW3_V1
+    class OSW3_RegisterMetaboxes extends OSW3
     {
         public $state;
         public $posts;
@@ -117,7 +117,7 @@ if (!class_exists('OSW3_V1_RegisterMetaboxes'))
                                 {
                                     $before = null;
                                     $after = null;
-                                    $className = "OSW3_V1_".ucfirst(strtolower($meta->type))."Type";
+                                    $className = "OSW3_".ucfirst(strtolower($meta->type))."Type";
     
                                     require_once $path.'osw3/form/form.php';
                                     require_once $path.'osw3/form/'.$meta->type.'.php';
@@ -224,7 +224,7 @@ if (!class_exists('OSW3_V1_RegisterMetaboxes'))
 
         public function save( $posts, $id, $path )
         {
-            $isValid = OSW3_V1::checkPostSchema(
+            $isValid = OSW3::checkPostSchema(
                 $path.'config.json', 
                 $_REQUEST['post_type']
             );

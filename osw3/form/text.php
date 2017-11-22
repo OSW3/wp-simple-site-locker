@@ -1,22 +1,44 @@
 <?php
 
-if (!class_exists('OSW3_V1_TextType'))
+if (!class_exists('OSW3_TextType'))
 {
-    class OSW3_V1_TextType extends OSW3_V1_FormType
+    class OSW3_TextType extends OSW3_FormType
     {
-        public function render($namespace, $showLabel = true, $wrapper = true, $before = null, $after = null)
+        // public function render($namespace, $showLabel = true, $wrapper = true, $before = null, $after = null)
+        // public function render( $attrNameAsArray=false, $showLabel = true, $wrapper = true, $before = null, $after = null)
+        public function render()
         {
-            return $this->renderField("text", $showLabel, $wrapper, [
+            // echo "<hr>";
+            // var_dump($this->getValue());
+            // echo "<hr>";
+            // var_dump($this->getAttrValue());
+            // echo "<hr>";
+            // // var_dump($this->attributes);
+
+            return $this->renderField([
                 $this->getAttrType(),
-                $this->getAttrName($namespace),
-                $this->getAttrId($namespace),
+                $this->getAttrName(),
+                $this->getAttrId(),
                 $this->getAttrClass(),
                 $this->getAttrValue(),
                 $this->getAttrPlaceholder(),
                 $this->getAttrRequired(),
                 $this->getAttrDisabled(),
                 $this->getAttrReadonly()
-            ], $before, $after);
+            ]);
+            
+                        // return $this->renderField("text", $showLabel, $wrapper, [
+                        //     $this->getAttrType(),
+                        //     $this->getAttrName(),
+                        //     $this->getAttrId(),
+            
+                        //     $this->getAttrClass(),
+                        //     $this->getAttrValue(),
+                        //     $this->getAttrPlaceholder(),
+                        //     $this->getAttrRequired(),
+                        //     $this->getAttrDisabled(),
+                        //     $this->getAttrReadonly()
+                        // ], $before, $after);
         }
     }
 }

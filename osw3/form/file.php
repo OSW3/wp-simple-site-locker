@@ -1,10 +1,11 @@
 <?php
 
-if (!class_exists('OSW3_V1_FileType'))
+if (!class_exists('OSW3_FileType'))
 {
-    class OSW3_V1_FileType extends OSW3_V1_FormType
+    class OSW3_FileType extends OSW3_FormType
     {
-        public function render($namespace, $showLabel = true, $wrapper = true, $before = null, $after = null)
+        // public function render($namespace, $showLabel = true, $wrapper = true, $before = null, $after = null)
+        public function render()
         {
             $value = $this->getValue();
 
@@ -18,15 +19,24 @@ if (!class_exists('OSW3_V1_FileType'))
                 $before .= "</div>";
             }
 
-            return $this->renderField("file", $showLabel, $wrapper, [
+            return $this->renderField([
                 $this->getAttrType(),
-                $this->getAttrName($namespace),
-                $this->getAttrId($namespace),
+                $this->getAttrName(),
+                $this->getAttrId(),
                 $this->getAttrClass(),
                 $this->getAttrRequired(),
                 $this->getAttrDisabled(),
                 $this->getAttrReadonly()
-            ], $before, $after);
+            ]);
+            // return $this->renderField("file", $showLabel, $wrapper, [
+            //     $this->getAttrType(),
+            //     $this->getAttrName($namespace),
+            //     $this->getAttrId($namespace),
+            //     $this->getAttrClass(),
+            //     $this->getAttrRequired(),
+            //     $this->getAttrDisabled(),
+            //     $this->getAttrReadonly()
+            // ], $before, $after);
         }
     }
 }

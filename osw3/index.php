@@ -8,55 +8,43 @@ if ( !function_exists( 'add_action' ) )
 	exit;
 }
 
-$__DIR__ = preg_replace("/\/osw3$/", null, __DIR__);
-
 // Files required
 require_once(__DIR__.'/osw3.php');
 
 // Plugin activation / desactivation
-register_activation_hook( $__DIR__."/index.php", function(){
-    $d = preg_replace("/\/osw3$/", null, __DIR__);
-    $c = OSW3_V1::getClassname($d); 
-    $p = new $c($d); 
+register_activation_hook( OSW3::base(__DIR__)."/index.php", function(){
+    $c = OSW3::getClassname(); 
+    $p = new $c(OSW3::base(__DIR__));
     $p->activate();
 });
-register_deactivation_hook( $__DIR__."/index.php", function(){
-    $d = preg_replace("/\/osw3$/", null, __DIR__);
-    $c = OSW3_V1::getClassname($d); 
-    $p = new $c($d); 
+register_deactivation_hook( OSW3::base(__DIR__)."/index.php", function(){
+    $c = OSW3::getClassname(); 
+    $p = new $c(OSW3::base(__DIR__));
     $p->deactivate();
 });
 add_action( 'init', function(){
-    $d = preg_replace("/\/osw3$/", null, __DIR__);
-    $c = OSW3_V1::getClassname($d); 
-    $p = new $c($d); 
+    $c = OSW3::getClassname(); 
+    $p = new $c(OSW3::base(__DIR__));
     $p->start();
 });
 
 if (!class_exists($plugin_name))
-{eval(sprintf('class %1$s extends OSW3_V1 
+{eval(sprintf('class %1$s extends OSW3 
 {
-    private static $initialized = false;
-
-    public function __construct($directory = null)
-    {
-        $this->init($directory);
-    }
+    private static $loaded = false;
     public function start()
     {
-        if (!self::$initialized )
+        if (!self::$loaded)
         {
-            self::$initialized = true;
-            $this->plugin();
-            $this->assets();
+            self::$loaded = $this->load();
         }
     }
-    public function activate ()
+    public function activate()
     {
-        $this->plugin_installer()->install();
+        $this->installer()->activate();
     }
-    public function deactivate ()
+    public function deactivate()
     {
-        $this->plugin_uninstaller()->uninstall();
+        $this->installer()->deactivate();
     }
-}', OSW3_V1::getClassname( $__DIR__ )));}
+}', OSW3::getClassname()));}

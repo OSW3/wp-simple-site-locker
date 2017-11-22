@@ -1,12 +1,9 @@
 <?php
 
-// ini_set("register_argc_argv", "on");
-
-if (!class_exists('OSW3_V1'))
+if (!class_exists('OSW3'))
 {
-    abstract class OSW3_V1
+    abstract class OSW3
     {
-        // private $_path;
         private $path;
         private $url;
         private $basename;
@@ -15,6 +12,7 @@ if (!class_exists('OSW3_V1'))
         private $namespace;
         private $config;
         private $prefix;
+        private $prefixTable;
         private $version;
         private $assets;
         private $assetsCss;
@@ -32,22 +30,32 @@ if (!class_exists('OSW3_V1'))
         private $posts;
         private $plugin_uri;
         
-        // public static $path;
-        public $pluginHooksFile;
+        public function __construct($directory = null)
+        {
+            $this->init($directory);
+        }
         
+
+
+
+        // /////////////////////////////////////////////////////////////////////
+        // Process /////////////////////////////////////////////////////////////
+        // /////////////////////////////////////////////////////////////////////
+        
+
+
+
         public function init($directory)
         {
             session_start();
-            
-            $this->setPath($directory);
-            $this->pluginHooksFile = $this->getPath().'functions.php';
-            $this->setUrl(trailingslashit(plugins_url('/',$this->getPath()."index.php")));
-            // $this->setConfig();
 
+            $this->setPath($directory);
+            $this->setUrl(trailingslashit(plugins_url('/',$this->getPath()."index.php")));
+            
             $this->configuration();
-                $this->setRegister();
-                $this->setRegisterPosts();
-                $this->setRegisterSettings();
+            $this->setRegister();
+            $this->setRegisterPosts();
+            $this->setRegisterSettings();
             $this->setHooks();
             $this->setName();
             $this->setNamespace();
@@ -55,30 +63,17 @@ if (!class_exists('OSW3_V1'))
             $this->setMenus();
             $this->setVersion();
             $this->setPrefix();
+            $this->setPrefixTable();
             $this->setSchemas();
             $this->setOptions();
             $this->setShortcodes();
-
-
-            // self::$path = $this->getPath();
-
-            // var_dump($this->getConfig());
-            // exit;
         }
+        
 
-        public function plugin()
-        {
-            // Init Events
-            $this->plugin_hooks();
-            
-            // Init registers
-            $this->plugin_register();
-            
-            // Init Shortcodes
-            $this->plugin_shortcodes();
-        }
-
-        public function assets ()
+        /**
+         * Assets injections
+         */
+        public function assets()
         {
             // add_action('wp_print_styles', array($this, 'enqueue_styles'));
             // add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
@@ -86,72 +81,199 @@ if (!class_exists('OSW3_V1'))
             add_action('admin_print_styles', array($this, 'enqueue_admin_styles'));
             add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         }
-        
-
-
 
         /**
-         * Set Plugin Config
+         * Configuration builder
          */
-        // public function setConfig()
-        // {
-        //     // $this->config = $this->plugin_configuration();
+        private function configuration()
+        {
+            $config = [];
+            $config_json = $this->getPath().'config.json';
 
-        //     // $file = $this->getPath().'config.json';
+            // Parse config from jSon file
+            if (file_exists($config_json))
+            {
+                $config_json = file_get_contents($config_json);
+                $config_json = json_decode($config_json, true);
 
-        //     // $this->config = (file_exists($file)) 
-        //     // ? json_decode(file_get_contents($file))
-        //     // : [];
+                $config = array_merge( $config, $config_json );
+            }
 
-        //     // // Get config form index.php
-        //     // $this->config = (object) array_merge(
-        //     //     (array) $this->config, 
-        //     //     self::getIndexConfig($this->getPath())
-        //     // );
+            // Parse config from Index.php
+            $config = array_merge(
+                $config,
+                self::configuration_index($this->getPath())
+            );
 
-        //     // $this->setName();
-        //     // $this->setSettingsNamespace();
-        //     // $this->setNamespace();
-        //     // $this->setVersion();
-        //     // $this->setPrefix();
+            $this->config = (object) $config;
+        }
 
-        //     $this->setOptions();
-        //     // $this->setRegister();
-        //     // $this->setHooks();
-        //     // $this->setAssetsStyles();
-        //     // $this->setAssetsScripts();
-        //     // $this->setAssetsAdminStyles();
-        //     // $this->setAssetsAdminScripts();
-        //     // $this->setShortcodes();
+        /**
+         * Get configuration from the index.php
+         */
+        public static function configuration_index( $path )
+        {
+            $config = [];
 
-        //     // var_dump(self::$path);
-        // }
+            $config_php = $path."index.php";
+            
+            if (file_exists($config_php)) 
+            {
+                $config_php = file_get_contents($config_php);
+                
+                preg_match(
+                    "/\/\*\*(.*)\*\//uis", 
+                    $config_php, 
+                    $config_params
+                );
+                $config_params = explode("* ", $config_params[0]);
+
+                foreach( $config_params as $config_param )
+                {
+                    list($config_param_key, $config_param_value) = explode(": ", $config_param);
+                    $config_param_key   = OSW3::slugify($config_param_key, "_");
+                    $config_param_value = trim(preg_replace("/\*\//", null, $config_param_value));
+
+                    if (!empty($config_param_key))
+                    {
+                        $config[$config_param_key] = trim($config_param_value);
+                    }
+                }
+            }
+
+            return $config;
+        }
         
+        /**
+         * Instantiate Events
+         */
+        protected function hooks()
+        {
+            if ($this->has_functions_file())
+            {
+                foreach ($this->getHooks() as $function => $event)
+                {
+                    if ( function_exists($function) )
+                    {
+                        $order = $event == 'init' ? 1 : 10;
+                        add_action($event, $function, $order);
+                    }
+                }
+            }
+
+
+            // if (file_exists($this->pluginHooksFile))
+            // {
+            //     require_once($this->pluginHooksFile);
+            //     foreach ($this->getHooks() as $function => $event)
+            //     {
+            //         if ( function_exists($function) )
+            //         {
+            //             $order = $event == 'init' ? 1 : 10;
+            //             add_action($event, $function, $order);
+            //         }
+            //     }
+            // }
+        }
+
+        /**
+         * The plugin activate/deactivate process
+         */
+        protected function installer()
+        {
+            return OSW3::include_class(
+                __DIR__.'/installer.php',
+                'OSW3_Installer',
+                [$this->getConfig()]
+            );
+        }
+        
+        /**
+         * The plugin loading process
+         */
+        public function load()
+        {
+            // Init Events
+            $this->hooks();
+            
+            // Init Shortcodes
+            $this->shortcodes();
+            
+            // Init registers
+            // $this->plugin_register();
+            return OSW3::include_class(
+                __DIR__.'/register.php',
+                'OSW3_Register',
+                [$this->getConfig()]
+            );
+
+            return true;
+        }
+        
+        /**
+         * Instantiate Shortcodes
+         */
+        protected function shortcodes()
+        {
+            if ($this->has_functions_file())
+            {
+                foreach ($this->getShortcodes() as $shortcode => $function)
+                {
+                    if ( function_exists($function) )
+                    {
+                        add_shortcode($shortcode, $function);
+                    }
+                }
+            }
+
+
+            // if (file_exists($this->pluginHooksFile))
+            // {
+            //     require_once($this->pluginHooksFile);
+            //     foreach ($this->getShortcodes() as $shortcode => $function)
+            //     {
+            //         if ( function_exists($function) )
+            //         {
+            //             add_shortcode($shortcode, $function);
+            //         }
+            //     }
+            // }
+        }
+        
+
+
+
+        // /////////////////////////////////////////////////////////////////////
+        // Gettre / Setter /////////////////////////////////////////////////////
+        // /////////////////////////////////////////////////////////////////////
+        
+
+
+
         /**
          * Get Plugin Name
          * @return (string)
          */
         public function getConfig()
         {
-            // return $this->config;
             return (object) [
-                "Name"      => $this->getName(),
-                "Namespace" => $this->getNamespace(),
-                "Classname" => self::getClassname($this->path),
-                "Prefix"    => $this->getPrefix(),
-                "Version"   => $this->getVersion(),
+                "Name"          => $this->getName(),
+                "Namespace"     => $this->getNamespace(),
+                "Classname"     => self::getClassname($this->path),
+                "Prefix"        => $this->getPrefix(),
+                "PrefixTable"   => $this->getPrefixTable(),
+                "Version"       => $this->getVersion(),
 
-                "Path"      => $this->getPath(),
-                "Url"       => $this->getUrl(),
-                "PluginUri" => $this->getPluginUri(),
-                "Menus"     => $this->getMenus(),
+                "Path"          => $this->getPath(),
+                "Url"           => $this->getUrl(),
+                "PluginUri"     => $this->getPluginUri(),
+                "Menus"         => $this->getMenus(),
                 
-                "Hooks"     => $this->getHooks(),
-                "Shortcodes"=> $this->getShortcodes(),
+                "Hooks"         => $this->getHooks(),
+                "Shortcodes"    => $this->getShortcodes(),
 
-                "Options"   => $this->getOptions(),
-                "Schemas"   => $this->getSchemas(),
-                // "Settings"  => $this->getSettings(),
+                "Options"       => $this->getOptions(),
+                "Schemas"       => $this->getSchemas(),
             ];
         }
         
@@ -162,8 +284,9 @@ if (!class_exists('OSW3_V1'))
          * Get Plugin Classname
          * @return (string)
          */
-        public static function getClassname($base)
+        public static function getClassname()
         {
+            $base = self::base(__DIR__);
             $conf = self::configuration_index( $base."/" );
 
             return self::slugify(implode(" ", [
@@ -203,7 +326,9 @@ if (!class_exists('OSW3_V1'))
          */
         public function setName()
         {
-            $this->name = isset($this->config->plugin_name) ? $this->config->plugin_name : null;
+            $this->name = isset($this->config->plugin_name) 
+                ? $this->config->plugin_name 
+                : null;
         }
         
         /**
@@ -290,7 +415,7 @@ if (!class_exists('OSW3_V1'))
         /**
          * Set Plugin Options
          */
-        public function setOptions($data = null)
+        public function setOptions( $data=null )
         {
             if (null === $data)
             {
@@ -309,6 +434,14 @@ if (!class_exists('OSW3_V1'))
                     }
                 }
             }
+
+            if (isset($this->config->options))
+            {
+                $this->options = array_merge(
+                    $this->options,
+                    $this->config->options
+                );
+            }
         }
         
         /**
@@ -318,8 +451,11 @@ if (!class_exists('OSW3_V1'))
         public function getOptions( $key=null )
         {
             if (null !== $key) {
-                return isset($this->options->$key) ? $this->options->$key : null;
+                return isset($this->options->$key) 
+                    ? $this->options->$key 
+                    : null;
             }
+            
             return $this->options;
         }
         
@@ -382,6 +518,27 @@ if (!class_exists('OSW3_V1'))
         public function getPrefix()
         {
             return $this->prefix;
+        }
+        
+
+
+
+        /**
+         * Set Plugin Database Table Prefix
+         */
+        public function setPrefixTable()
+        {
+            global $wpdb;
+            $this->prefixTable =  $wpdb->prefix.$this->getPrefix();
+        }
+        
+        /**
+         * Get Plugin Database Table Prefix
+         * @return (string)
+         */
+        public function getPrefixTable()
+        {
+            return $this->prefixTable;
         }
         
 
@@ -499,6 +656,137 @@ if (!class_exists('OSW3_V1'))
         {
             return $this->version;
         }
+        
+        
+
+        private function setRegister()
+        {
+            $this->register = isset($this->config->register)
+                ? (object) $this->config->register
+                : (object) [];
+        }
+        private function setRegisterPosts()
+        {
+            $this->posts = isset($this->register->posts)
+                ? (object) $this->register->posts
+                : (object) [];
+        }
+        private function setRegisterSettings()
+        {
+            $this->settings = isset($this->register->settings)
+                ? (object) $this->register->settings
+                : (object) [];
+        }
+
+        protected function getRegister()
+        {
+            return $this->register;
+        }
+        
+
+
+
+        // /////////////////////////////////////////////////////////////////////
+        // Utils ///////////////////////////////////////////////////////////////
+        // /////////////////////////////////////////////////////////////////////
+        
+
+
+
+        /**
+         * Include Classe, its dependencies & instantiate
+         */
+        public static function include_class( $classFile, $className, $params=[], $dependencies=[] )
+        {
+            // Load dependencies
+            foreach ($dependencies as $dependency) 
+            {
+                if (file_exists($dependency))
+                {
+                    require_once($dependency);
+                }
+            }
+
+            // Load class
+            if (file_exists($classFile))
+            {
+                require_once($classFile);
+
+                if (class_exists($className))
+                {
+                    return new $className( $params );
+                }
+            }
+        }
+
+        /**
+         * Slugify
+         * Generate & return a slug string
+         */
+        public static function slugify( $text, $separator="-" )
+        {
+            $text = preg_replace('~[^\pL\d]+~u', $separator, $text);
+            $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
+            $text = preg_replace('~[^-\w]+~', '', $text);
+            $text = trim($text, $separator);
+            $text = preg_replace('~-+~', $separator, $text);
+            $text = strtolower($text);
+
+            if (empty($text)) return false;
+
+            return $text;
+        }
+
+        /**
+         * Has functions file
+         * Check if the plugin have the file "functions.php"
+         */
+        private function has_functions_file()
+        {
+            $file = $this->getPath().'functions.php';
+
+            if (file_exists($file))
+            {
+                require_once($file);
+                return true;
+            }
+
+            return false;
+        }
+
+        /**
+         * Try To Do
+         * Try to execute a function
+         */
+        public static function tryToDo( $expression )
+        {
+            list($a, $b) = explode(":", $expression);
+
+            if ("do" === $a && function_exists($b)) {
+                return $b();
+            }
+
+            else if ("menu" === $a) {
+                $o = [];
+                $items = wp_get_nav_menu_items($b);
+
+                if (is_array($items))
+                {
+                    foreach ($items as $item) 
+                    {
+                        $o[ OSW3::slugify($item->title) ] = $item->title;
+                    }
+                }
+                return $o;
+            }
+
+            return false;
+        }
+
+        public static function base( $directory )
+        {
+            return preg_replace("/\/osw3$/", null, $directory);
+        }
 
 
 
@@ -506,6 +794,40 @@ if (!class_exists('OSW3_V1'))
 
         
         
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -570,31 +892,6 @@ if (!class_exists('OSW3_V1'))
 
 
 
-        private function setRegister()
-        {
-            $this->register = isset($this->config->register)
-                ? (object) $this->config->register
-                : (object) [];
-        }
-        private function setRegisterPosts()
-        {
-            $this->posts = isset($this->register->posts)
-                ? (object) $this->register->posts
-                : (object) [];
-        }
-        private function setRegisterSettings()
-        {
-            $this->settings = isset($this->register->settings)
-                ? (object) $this->register->settings
-                : (object) [];
-        }
-
-        protected function getRegister()
-        {
-            return $this->register;
-        }
-
-
 
 
 
@@ -643,11 +940,11 @@ if (!class_exists('OSW3_V1'))
 
 
 
-        public function wpdb()
-        {
-            global $wpdb;
-            return $wpdb;
-        }
+        // public function wpdb()
+        // {
+        //     global $wpdb;
+        //     return $wpdb;
+        // }
 
 
         public function enqueue_styles()
@@ -730,167 +1027,63 @@ if (!class_exists('OSW3_V1'))
 
 
 
-        /**
-         * Configuration builder
-         */
-        private function configuration()
-        {
-            $config = [];
-            $config_json = $this->getPath().'config.json';
 
-            // Parse config from jSon file
-            if (file_exists($config_json))
-            {
-                $config_json = file_get_contents($config_json);
-                $config_json = json_decode($config_json, true);
 
-                $config = array_merge( $config, $config_json );
-            }
 
-            // Parse config from Index.php
-            $config = array_merge(
-                $config,
-                self::configuration_index($this->getPath())
-            );
 
-            $this->config = (object) $config;
-        }
 
-        /**
-         * 
-         */
-        public static function configuration_index( $path )
-        {
-            $config = [];
 
-            $config_php = $path."index.php";
+
+
+
+
+
+
+
+
+        // /**
+        //  * Instantiate Installer
+        //  */
+        // protected function installer ()
+        // {
+        //     return OSW3::include_class(
+        //         __DIR__.'/installer.php',
+        //         'OSW3_Installer',
+        //         [$this->getConfig()]
+        //     );
             
-            if (file_exists($config_php)) 
-            {
-                $config_php = file_get_contents($config_php);
-                
-                preg_match(
-                    "/\/\*\*(.*)\*\//uis", 
-                    $config_php, 
-                    $config_params
-                );
-                $config_params = explode("* ", $config_params[0]);
+            
+            
+        //                 // var_dump( $this->getConfig() ); 
+        //                 // $config = $plugin->getConfig(); 
 
-                foreach( $config_params as $config_param )
-                {
-                    list($config_param_key, $config_param_value) = explode(": ", $config_param);
-                    $config_param_key   = OSW3_V1::slugify($config_param_key, "_");
-                    $config_param_value = trim(preg_replace("/\*\//", null, $config_param_value));
-
-                    if (!empty($config_param_key))
-                    {
-                        $config[$config_param_key] = trim($config_param_value);
-                    }
-                }
-            }
-
-            return $config;
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        /**
-         * Instantiate Installer
-         */
-        protected function plugin_installer ()
-        {
-            require_once(__DIR__.'/installer.php');
-            return new OSW3_V1_Installer( $this );
-        }
+        //     // require_once(__DIR__.'/installer.php');
+        //     // return new OSW3_Installer( $this );
+        // }
     
-        /**
-         * Instantiate Uninstaller
-         */
-        protected function plugin_uninstaller ()
-        {
-            // $path_installer = __DIR__.'/installer.php';
-            // $path_uninstaller = __DIR__.'/uninstaller.php';
-            
-            // if (file_exists($path_installer) && file_exists($path_uninstaller))
-            // {
-                require_once(__DIR__.'/installer.php');
-                require_once(__DIR__.'/uninstaller.php');
-            // }
-            // if (class_exists('OSW3_V1_Uninstaller'))
-            // {
-                return new OSW3_V1_Uninstaller( $this );
-                // $uninstaller->uninstall();
-            // }
-            
-        }
+
+
+
     
-        /**
-         * Instantiate Post
-         */
-        protected function plugin_register ()
-        {
-            $path_register = __DIR__.'/register.php';
+        // /**
+        //  * Instantiate Post
+        //  */
+        // protected function plugin_register ()
+        // {
+        //     $path_register = __DIR__.'/register.php';
 
-            // if (file_exists($path_register))
-            // {
-                require_once($path_register);
-            // }
+        //     // if (file_exists($path_register))
+        //     // {
+        //         require_once($path_register);
+        //     // }
 
-            // if (class_exists('OSW3_V1_Register'))
-            // {
-                return new OSW3_V1_Register( $this );
-            // }
+        //     // if (class_exists('OSW3_Register'))
+        //     // {
+        //         return new OSW3_Register( $this );
+        //     // }
 
-            // return false;
-        }
-        
-        /**
-         * Instantiate Shortcodes
-         */
-        protected function plugin_shortcodes()
-        {
-            if (file_exists($this->pluginHooksFile))
-            {
-                require_once($this->pluginHooksFile);
-                foreach ($this->getShortcodes() as $shortcode => $function)
-                {
-                    if ( function_exists($function) )
-                    {
-                        add_shortcode($shortcode, $function);
-                    }
-                }
-            }
-        }
-        
-        /**
-         * Instantiate Events
-         */
-        protected function plugin_hooks()
-        {
-            if (file_exists($this->pluginHooksFile))
-            {
-                require_once($this->pluginHooksFile);
-                foreach ($this->getHooks() as $function => $event)
-                {
-                    if ( function_exists($function) )
-                    {
-                        $order = $event == 'init' ? 1 : 10;
-                        add_action($event, $function, $order);
-                    }
-                }
-            }
-        }
+        //     // return false;
+        // }
 
 
 
@@ -906,33 +1099,6 @@ if (!class_exists('OSW3_V1'))
 
 
 
-        public static function include_class($file, $className, $params = [])
-        {
-            if (file_exists($file))
-            {
-                require_once($file);
-
-                if (class_exists($className))
-                {
-                    new $className( $params );
-                }
-            }
-        }
-
-
-        public static function slugify($text,$separator="-")
-        {
-            $text = preg_replace('~[^\pL\d]+~u', $separator, $text);
-            $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
-            $text = preg_replace('~[^-\w]+~', '', $text);
-            $text = trim($text, $separator);
-            $text = preg_replace('~-+~', $separator, $text);
-            $text = strtolower($text);
-
-            if (empty($text)) return false;
-
-            return $text;
-        }
 
 
 
@@ -940,30 +1106,18 @@ if (!class_exists('OSW3_V1'))
 
 
 
-        public static function tryToDo( $expression )
-        {
-            list($a, $b) = explode(":", $expression);
 
-            if ("do" === $a && function_exists($b)) {
-                return $b();
-            }
 
-            else if ("menu" === $a) {
-                $o = [];
-                $items = wp_get_nav_menu_items($b);
 
-                if (is_array($items))
-                {
-                    foreach ($items as $item) 
-                    {
-                        $o[ OSW3_V1::slugify($item->title) ] = $item->title;
-                    }
-                }
-                return $o;
-            }
 
-            return false;
-        }
+
+
+
+
+
+
+
+
 
 
         public static function getPostSchema($configFile, $params)
@@ -1010,7 +1164,7 @@ if (!class_exists('OSW3_V1'))
                 if (isset($params['rows']))
                     $config->rows = $params['rows'];
 
-                $className = "OSW3_V1_".ucfirst(strtolower($config->type))."Type";
+                $className = "OSW3_".ucfirst(strtolower($config->type))."Type";
                 require_once $path.'form/form.php';
                 require_once $path.'form/'.strtolower($config->type).'.php';
 

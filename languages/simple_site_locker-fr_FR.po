@@ -1,0 +1,47 @@
+# Translation of Plugins - OSW3 Base Plugins - Simple Site Locker in French (France)
+msgid ""
+msgstr ""
+"Project-Id-Version: OSW3 Plugins - Simple Site Locker\n"
+"PO-Revision-Date: 2017-11-21 23:23+0100\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n > 1;\n"
+"Language-Team: http://osw3.net\n"
+"Language: fr\n"
+
+#: Message par défaut
+msgid "This website is temporarily inaccessible."
+msgstr "Ce site est temporairement inaccessible."
+
+#: Section Title
+msgid "Locking"
+msgstr "Verrouillage"
+
+#: Section Description
+msgid "Enable site locking will prevent anyone who does not have the access code from visiting the site."
+msgstr "Activer le verrouillage du site, empêchera toute personne qui ne possède pas le code d'accès de visiter le site."
+
+#: Label for Activate field
+msgid "Activate"
+msgstr "Activer"
+
+#: Helper for Activate field
+msgid "Check to activate the lock screen."
+msgstr "Cochez pour activer l'écran de verrouillage."
+
+#: Label for Access code field
+msgid "Set the access code"
+msgstr "Définir le code d'accès"
+
+#: Helper for Access code field
+msgid "Set the acces code to unlock temporarily your website when Simple Site Locker is active."
+msgstr "Définissez le code d'accès pour déverrouiller temporairement votre site Web lorsque Simple Site Locker est actif."
+
+#: Label for Unlock duration field
+msgid "Unlock during"
+msgstr "Déverrouiller pendant"
+
+#: Helper for Unlock duration field
+msgid "Define an unlock duration when the access code is submitted."
+msgstr "Définir une durée de déverrouillage lorsque le code d'accès est soumis."

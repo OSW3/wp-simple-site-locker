@@ -1,8 +1,8 @@
 <?php
 
-if (!class_exists('OSW3_V1_RegisterSettings'))
+if (!class_exists('OSW3_RegisterSettings'))
 {
-    class OSW3_V1_RegisterSettings extends OSW3_V1
+    class OSW3_RegisterSettings extends OSW3
     {
         private $config;
         public $errors = [];
@@ -10,14 +10,14 @@ if (!class_exists('OSW3_V1_RegisterSettings'))
         public function __construct( $params )
         {
             $this->config = $params[0];
-            $this->plugin_menus();
+            $this->settings();
         }
 
         /**
          * Plugin Menus
          * Display the link of the settings page
          */
-        private function plugin_menus()
+        private function settings()
         {
             if (isset($this->config->Menus))
             {
@@ -35,7 +35,7 @@ if (!class_exists('OSW3_V1_RegisterSettings'))
                                         $this->config->Name, 
                                         'manage_options', 
                                         $this->config->Namespace, 
-                                        array($this, 'add_options_page'),
+                                        array($this, 'page'),
                                         $this->config->Menus['icon']
                                     );
                                 }
@@ -65,7 +65,7 @@ if (!class_exists('OSW3_V1_RegisterSettings'))
                                         $this->config->Name,
                                         'manage_options', 
                                         $this->config->Namespace,
-                                        array($this, 'add_options_page')
+                                        array($this, 'page')
                                     );
                                 }
                             );
@@ -74,12 +74,21 @@ if (!class_exists('OSW3_V1_RegisterSettings'))
                 }
             }
         }
+        
+        /**
+         * Process to build the settings page
+         */
+        public function page()
+        {
+            $this->submit();
+            $this->form();
+        }
 
         /**
          * Settings Form Schema
          * Get schema for the settings
          */
-        public function settings_form_schema()
+        public function schema()
         {
             $namespace = $this->config->Namespace;
             $options = get_option( $namespace );
@@ -94,7 +103,7 @@ if (!class_exists('OSW3_V1_RegisterSettings'))
                     $schema[$section_key]['ID'] = uniqid();
                     
                 if (!isset($section_value['namespace']))
-                    $schema[$section_key]['namespace'] = $this->config->Namespace.'_'.$schema[$section_key]->ID;
+                    $schema[$section_key]['namespace'] = $this->config->Namespace.'_'.$schema[$section_key]['ID'];
                     
                 if (!isset($section_value['schema']))
                     $schema[$section_key]['schema'] = [];
@@ -104,17 +113,15 @@ if (!class_exists('OSW3_V1_RegisterSettings'))
                     if (!isset($field_value['ID']))
                         $schema[$section_key]['schema'][$field_key]['ID'] = uniqid();
                     
-                    // if (!isset($l1_value->value))
-                    // {
-                        $value = null;
-                        if (isset($field_value->default)) $value = $field_value->default;
-                        if (isset($options[$field_value->key])) $value = $options[$field_value->key];
-
-                        $schema[$section_key]['schema'][$field_key]['value'] = $value;
-                    // }
+                    $value = null;
+                    
+                    if (isset($field_value['default'])) $value = $field_value['default'];
+                    if (isset($options[$field_value['key']])) $value = $options[$field_value['key']];
+                    
+                    $schema[$section_key]['schema'][$field_key]['value'] = $value;
                     
                     if (!isset($field_value['section']))
-                        $schema[$section_key]['schema'][$field_key]['section'] = $_TempSchema[$field_key]['ID'];
+                    $schema[$section_key]['schema'][$field_key]['section'] = $schema[$section_key]['ID'];
                 }
             }
 
@@ -125,11 +132,11 @@ if (!class_exists('OSW3_V1_RegisterSettings'))
          * Settings Form Builder
          * Generate the settings page
          */
-        public function settings_form_builder()
+        public function form()
         {
-            global $settings_form_schema;
+            global $schema;
 
-            $settings_form_schema = $this->settings_form_schema();
+            $schema = $this->schema();
             $name = $this->config->Name;
             $version = $this->config->Version;
             $url = $this->config->PluginUri;
@@ -137,43 +144,42 @@ if (!class_exists('OSW3_V1_RegisterSettings'))
             echo '<div class="wrap osw3-plugin">';
             echo '<h3>'.$name.'</h3>';
             echo '<p>';
-            echo 'version '.$version;
+            echo __('version', 'osw3_plugins' ).' '.$version;
             echo ' - ';
-            echo '<a href="'.$url.'" target="_blank">get info</a>';
+            echo '<a href="'.$url.'" target="_blank">'.__('info', 'osw3_plugins' ).'</a>';
             echo '</p>';
             echo '<hr>';
 
             if ('POST' === $_SERVER['REQUEST_METHOD'] && !empty($this->errors))
             {
                 echo '<div class="alert alert-danger">';
-                echo 'This form has errors';
+                echo __('This form has errors.', 'osw3_plugins' );
                 echo '</div>';
             } 
             else if ('POST' === $_SERVER['REQUEST_METHOD'] && empty($this->errors))
             {
                 echo '<div class="alert alert-success">';
-                echo 'This form is updated succesfully';
+                echo __('This form is updated succesfully.', 'osw3_plugins' );
                 echo '</div>';
             }
 
-            echo '<form method="post">';
+            echo '<form method="post" novalidate>';
 
-            foreach ( $settings_form_schema as $section_key => $section_data )
+            foreach ( $schema as $section_key => $section_data )
             {
-                
                 $section_namespace = $section_data['namespace'].$section_data['ID'];
                 
                 add_settings_section(
                     $section_namespace,
-                    $section_data['title'],
+                    __($section_data['title'], $this->config->Namespace ),
                     function ($data)
                     {
-                        global $settings_form_schema;
-                        foreach ($settings_form_schema as $section)
+                        global $schema;
+                        foreach ($schema as $section)
                         {
                             if ($data['id'] === $section['namespace'].$section['ID'])
                             {
-                                echo $section['description'];
+                                echo __($section['description'], $this->config->Namespace );
                             }
                         }
                     },
@@ -186,29 +192,35 @@ if (!class_exists('OSW3_V1_RegisterSettings'))
                     {
                         $field = (object) $field;
 
-                        require_once $this->config->Path.'osw3/form/form.php';
-                        require_once $this->config->Path.'osw3/form/'.$field->type.'.php';
-
-                        $classType = "OSW3_V1_".ucfirst(strtolower($field->type))."Type";
-                        $formType = new $classType($field, $this);
-
-                        $callback = $formType->render($this->config->Namespace, false);
-                        if (!empty($this->errors[$field->key]))
+                        if (isset($field->key))
                         {
-                            $callback.= '<div class="has-error">'.$this->errors[$field->key].'</div>';
+                            require_once $this->config->Path.'osw3/form/form.php';
+                            require_once $this->config->Path.'osw3/form/'.$field->type.'.php';
+    
+                            $classType = ucfirst(strtolower($field->type));
+                            $classType = "OSW3_".$classType."Type";
+                            
+                            $formType = new $classType([
+                                "config"            => $this->config,
+                                "attributes"        => $field, 
+                                "addLabelTag"       => false, 
+                                "addWrapper"        => false, 
+                                "attrNameAsArray"   => true,
+                                "errors"            => $this->errors
+                            ]);
+                            
+                            $callback = "echo '". $formType->render() ."';";
+    
+                            add_settings_field( 
+                                $field->key, 
+                                __($field->label, $this->config->Namespace ),
+                                create_function('', $callback),
+                                $this->config->Namespace, 
+                                $section_namespace
+                            );
                         }
-                        $callback = create_function('', "echo '".$callback."';");
-
-                        add_settings_field( 
-                            $field->key, 
-                            $field->label, 
-                            $callback,
-                            $this->config->Namespace, 
-                            $section_namespace
-                        );
                     }
                 }
-
             }
             
             settings_fields( $this->config->Namespace );
@@ -219,23 +231,24 @@ if (!class_exists('OSW3_V1_RegisterSettings'))
             echo '</div>';
         }
 
+
         /**
          * Settings Form Submit
          * Check and save the settings form
          */
-        public function settings_form_submit()
+        private function submit()
         {
             if ('POST' === $_SERVER['REQUEST_METHOD']) 
             {
-                $settings_form_schema = $this->settings_form_schema();
+                $schema = $this->schema();
 
                 $fields = [];
-                $response = [];
+                $responses = [];
                 $data = isset($_POST[$this->config->Namespace]) 
                     ? $_POST[$this->config->Namespace] 
                     : [];
                 
-                foreach ($settings_form_schema as $section)
+                foreach ($schema as $section)
                 {
                     foreach ($section['schema'] as $field) 
                     {
@@ -255,20 +268,20 @@ if (!class_exists('OSW3_V1_RegisterSettings'))
                     }
                 }
 
-                // Define response
+                // Define responses
                 foreach ($fields as $field_key => $field_data)
                 {
                     
                     switch ($field_data['type'])
                     {
                         case 'checkbox':
-                            $response[$field_key] = null !== $data[$field_key] ? "on" : "off";
+                            $responses[$field_key] = null !== $data[$field_key] ? "on" : "off";
                             break;
                         case 'password':
-                            $response[$field_key] = !empty($data[$field_key]) ? password_hash($data[$field_key], PASSWORD_DEFAULT) : "";
+                            $responses[$field_key] = !empty($data[$field_key]) ? password_hash($data[$field_key], PASSWORD_DEFAULT) : "";
                             break;
                         default:
-                            $response[$field_key] = $data[$field_key];
+                            $responses[$field_key] = $data[$field_key];
                             break;
                     }
                 }
@@ -298,17 +311,19 @@ if (!class_exists('OSW3_V1_RegisterSettings'))
                 }
                 
                 // Update database
-                if (empty($this->errors)) {
-                    update_option($this->config->Namespace, $response);
+                if (empty($this->errors)) 
+                {
+                    $responses = array_merge(
+                        $this->config->Options, 
+                        $responses
+                    );
+                    
+                    update_option(
+                        $this->config->Namespace, 
+                        $responses
+                    );
                 }
             }
-        }
-        
-        
-        public function add_options_page()
-        {
-            $this->settings_form_submit();
-            $this->settings_form_builder();
         }
     }
 }
