@@ -1,4 +1,11 @@
 {
+    "assets": {
+        "styles": [{
+            "name": "simple-site-locker-style",
+            "path": "front"
+        }]
+    },
+
     "options": {
         "lock_screen": "site-locker.php"
     },
@@ -8,56 +15,48 @@
                 "action": true,
                 "settings": true
             },
-            "schema": [
+            "sections": [
                 {
                     "title": "Locking",
-                    "description": "Enable site locking will prevent anyone who does not have the access code from visiting the site.",
-                    "schema": [
-                        {
-                            "key": "is_locked",
-                            "label": "Activate",
-                            "type": "checkbox",
-                            "helper": "Check to activate the lock screen.",
-                            "default": "on"
+                    "description": "Enabling site locking prevents access to the site by visitors who do not have the access code.",
+                    "schema": [{
+                        "key": "is_locked",
+                        "label": "Activate",
+                        "type": "checkbox",
+                        "helper": "Check to activate the lock screen.",
+                        "default": "on"
+                    },{
+                        "key": "password",
+                        "label": "Set the access code",
+                        "type": "password",
+                        "placeholder": "••••••••",
+                        "helper": "Set the access code to unlock temporarily your website when Simple Site Locker is active."
+                    },{
+                        "key": "expires",
+                        "label": "Unlock during",
+                        "type": "choices",
+                        "expanded": true,
+                        "default": "7200",
+                        "choices": {
+                            "3600": "1 hour",
+                            "7200": "2 hours",
+                            "21600": "6 hours",
+                            "43200": "12 hours",
+                            "86400": "1 day",
+                            "172800": "2 days",
+                            "604800": "7 days",
+                            "1209600": "14 days"
                         },
-                        {
-                            "key": "password",
-                            "label": "Set the access code",
-                            "type": "password",
-                            "placeholder": "••••••••",
-                            "helper": "Set the acces code to unlock temporarily your website when Simple Site Locker is active."
-                        },
-                        {
-                            "key": "expires",
-                            "label": "Unlock during",
-                            "type": "choices",
-                            "default": "43200",
-                            "choices": {
-                                "3600": "1 hour",
-                                "7200": "2 hours",
-                                "21600": "6 hours",
-                                "43200": "12 hours",
-                                "86400": "1 day",
-                                "172800": "2 days",
-                                "604800": "7 days",
-                                "1209600": "14 days",
-                                "2592000": "1 month",
-                                "5184000": "2 month",
-                                "7776000": "3 month",
-                                "15552000": "6 month",
-                                "31104000": "1 year"
-                            },
-                            "helper": "Define an unlock duration when the access code is submitted."
-                        }
-                    ]
+                        "helper": "Define an unlock duration when the access code is submitted."
+                    }]
                 }
             ]
         }
     },
     "hooks": {
-        "OSW3_SiteLocker": "wp"
+        "SimpleSiteLocker": "wp"
     },
     "shortcodes": {
-        "OSW3_SiteLocker_UnlockForm": "OSW3_SiteLocker_UnlockForm"
+        "SimpleSiteLocker_UnlockForm": "SimpleSiteLocker_UnlockForm"
     }
 }

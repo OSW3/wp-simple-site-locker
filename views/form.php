@@ -3,6 +3,7 @@
 if (!defined('ABSPATH')) {exit;}
 ?>
 
+
 <form action="/" method="POST" novalidate>
     <?php wp_nonce_field('sitelocker', 'sitelocker-token'); ?>
     <p><?= __( 'This website is temporarily inaccessible.', 'simple_site_locker'); ?></p>

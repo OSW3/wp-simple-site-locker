@@ -1,47 +1,81 @@
-# Translation of Plugins - OSW3 Base Plugins - Simple Site Locker in French (France)
+# Translation of Plugins - Simple Site Locker in French (France)
 msgid ""
 msgstr ""
-"Project-Id-Version: OSW3 Plugins - Simple Site Locker\n"
-"PO-Revision-Date: 2017-11-21 23:23+0100\n"
+"Project-Id-Version: Simple Site Locker\n"
+"PO-Revision-Date: 2017-12-01 02:07+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
 "Language-Team: http://osw3.net\n"
 "Language: fr\n"
+"POT-Creation-Date: \n"
+"Last-Translator: \n"
+
+
+# ------------------------------------------------------------------------------
+
 
 #: Message par défaut
 msgid "This website is temporarily inaccessible."
 msgstr "Ce site est temporairement inaccessible."
 
-#: Section Title
+
+# ------------------------------------------------------------------------------
+
+# Section 1
+
+#: Settings : Section 1 : Title
 msgid "Locking"
 msgstr "Verrouillage"
 
-#: Section Description
-msgid "Enable site locking will prevent anyone who does not have the access code from visiting the site."
-msgstr "Activer le verrouillage du site, empêchera toute personne qui ne possède pas le code d'accès de visiter le site."
+#: Settings : Section 1 (Notification) : Description
+msgid "Enabling site locking prevents access to the site by visitors who do not have the access code."
+msgstr "L'activation du verrouillage du site empêche les visiteurs qui n'ont pas le code d'accès d'accéder au site."
 
-#: Label for Activate field
+
+
+#: Settings : Section 1 : Activation label
 msgid "Activate"
 msgstr "Activer"
 
-#: Helper for Activate field
+#: Settings : Section 1 : Activation helper
 msgid "Check to activate the lock screen."
 msgstr "Cochez pour activer l'écran de verrouillage."
 
-#: Label for Access code field
+
+#: Settings : Section 1 : Set the code label
 msgid "Set the access code"
 msgstr "Définir le code d'accès"
 
-#: Helper for Access code field
-msgid "Set the acces code to unlock temporarily your website when Simple Site Locker is active."
+#: Settings : Section 1 : Set the code helper
+msgid "Set the access code to unlock temporarily your website when Simple Site Locker is active."
 msgstr "Définissez le code d'accès pour déverrouiller temporairement votre site Web lorsque Simple Site Locker est actif."
 
-#: Label for Unlock duration field
+
+
+#: Settings : Section 1 : Unlock during label
 msgid "Unlock during"
 msgstr "Déverrouiller pendant"
 
-#: Helper for Unlock duration field
+#: Settings : Section 1 : Unlock during helper
 msgid "Define an unlock duration when the access code is submitted."
 msgstr "Définir une durée de déverrouillage lorsque le code d'accès est soumis."
+
+
+msgid "1 hour"
+msgstr "1 heure"
+msgid "2 hours"
+msgstr "2 heures"
+msgid "6 hours"
+msgstr "6 heures"
+msgid "12 hours"
+msgstr "12 heures"
+msgid "1 day"
+msgstr "1 jour"
+msgid "2 days"
+msgstr "2 jours"
+msgid "7 days"
+msgstr "7 jours"
+msgid "14 days"
+msgstr "14 jours"

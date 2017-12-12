@@ -1,0 +1,41 @@
+.simple-site-locker-unlocked
+{
+    position: fixed;
+    top: 50%;
+    right: 20px;
+    border-radius: 40px;
+    height: 40px;
+    width: 40px;
+    margin-top: -20px;
+    line-height: 40px;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.20);
+    z-index: 99999999;
+}
+.simple-site-locker-unlocked a
+{
+    color: #000000;
+    text-decoration: none;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+    line-height: 1;
+    font-family: dashicons;
+    text-decoration: inherit;
+    font-weight: 400;
+    font-style: normal;
+    
+    height: 40px;
+    width: 40px;
+    line-height: 40px;
+    text-align: center;
+}
+.simple-site-locker-unlocked a::before
+{
+    content: "\f528";
+}
+.simple-site-locker-unlocked a:hover::before
+{
+    content: "\f160";
+}
